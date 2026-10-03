@@ -1,1 +1,11 @@
-
+[
+  {
+    "title": "Admin Commands",
+    "description": "Commandes administrateur",
+    "language": "lua",
+    "path": "scripts/admin.lua",
+    "new": true,
+    "tags": ["Roblox", "Admin"],
+    "code": "print(\"Hello\")"
+  }
+]
