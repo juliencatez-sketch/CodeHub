@@ -1,818 +1,122 @@
-/* =========================================================
-   CODEHUB V9 — GITHUB PAGES
-   ========================================================= */
 
-let scripts = [];
-
-const grid = document.getElementById("script-grid");
-const search = document.getElementById("search");
-const filter = document.getElementById("language-filter");
-const empty = document.getElementById("empty");
-const countLabel = document.getElementById("count-label");
-const languageList = document.getElementById("language-list");
-
-/* =========================================================
-   LANGUAGES
-   ========================================================= */
-
-const languageInfo = {
-    lua: {
-        label: "Lua / Luau",
-        hl: "lua"
-    },
-
-    luau: {
-        label: "Lua / Luau",
-        hl: "lua"
-    },
-
-    javascript: {
-        label: "JavaScript",
-        hl: "javascript"
-    },
-
-    js: {
-        label: "JavaScript",
-        hl: "javascript"
-    },
-
-    python: {
-        label: "Python",
-        hl: "python"
-    },
-
-    html: {
-        label: "HTML",
-        hl: "xml"
-    },
-
-    css: {
-        label: "CSS",
-        hl: "css"
-    },
-
-    typescript: {
-        label: "TypeScript",
-        hl: "typescript"
-    },
-
-    ts: {
-        label: "TypeScript",
-        hl: "typescript"
-    },
-
-    json: {
-        label: "JSON",
-        hl: "json"
-    },
-
-    csharp: {
-        label: "C#",
-        hl: "csharp"
-    },
-
-    cpp: {
-        label: "C++",
-        hl: "cpp"
-    },
-
-    "c++": {
-        label: "C++",
-        hl: "cpp"
-    }
+// CodeHub — GitHub Pages static loader
+const state = {
+  scripts: [],
+  filtered: [],
+  query: '',
+  language: 'all'
 };
 
-function getLanguageInfo(language) {
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => [...document.querySelectorAll(s)];
 
-    const key = String(language || "text").toLowerCase();
-
-    return languageInfo[key] || {
-        label: language || "Code",
-        hl: "plaintext"
-    };
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'
+  }[c]));
 }
 
-/* =========================================================
-   SECURITY / HTML ESCAPE
-   ========================================================= */
-
-function escapeHTML(value) {
-
-    return String(value ?? "").replace(/[&<>"']/g, character => {
-
-        const entities = {
-            "&": "&amp;",
-            "<": "&lt;",
-            ">": "&gt;",
-            '"': "&quot;",
-            "'": "&#039;"
-        };
-
-        return entities[character];
-    });
+function languageClass(lang) {
+  return String(lang || 'text').toLowerCase().replace(/[^a-z0-9_-]/g,'');
 }
-
-/* =========================================================
-   LOAD MANIFEST
-   ========================================================= */
-
-async function loadScripts() {
-
-    try {
-
-        console.log("CodeHub : chargement du manifest...");
-
-        const response = await fetch(
-            "./scripts/manifest.json?cache=" + Date.now()
-        );
-
-        if (!response.ok) {
-
-            throw new Error(
-                "Impossible de charger manifest.json : HTTP " +
-                response.status
-            );
-        }
-
-        const data = await response.json();
-
-        if (!Array.isArray(data)) {
-
-            throw new Error(
-                "manifest.json doit contenir un tableau JSON."
-            );
-        }
-
-        scripts = data.map((script, index) => {
-
-            return {
-                ...script,
-
-                _path:
-                    script.path ||
-                    "scripts/script-" + index + ".json"
-            };
-
-        });
-
-        console.log(
-            "CodeHub :",
-            scripts.length,
-            "script(s) chargé(s)."
-        );
-
-        updateStatistics();
-
-        buildLanguageFilters();
-
-        renderScripts();
-
-    } catch (error) {
-
-        console.error(
-            "CodeHub - erreur de chargement :",
-            error
-        );
-
-        if (countLabel) {
-            countLabel.textContent = "0 available";
-        }
-
-        if (grid) {
-
-            grid.innerHTML = `
-                <div
-                    class="empty"
-                    style="grid-column:1/-1"
-                >
-                    <div class="empty-icon">!</div>
-
-                    <h3>
-                        Impossible de charger les scripts
-                    </h3>
-
-                    <p>
-                        Vérifie que
-                        <code>scripts/manifest.json</code>
-                        existe bien.
-                    </p>
-                </div>
-            `;
-        }
-    }
-}
-
-/* =========================================================
-   STATISTICS
-   ========================================================= */
-
-function updateStatistics() {
-
-    const scriptsCounter =
-        document.getElementById("stat-scripts");
-
-    const languagesCounter =
-        document.getElementById("stat-languages");
-
-    if (scriptsCounter) {
-
-        scriptsCounter.textContent =
-            scripts.length;
-    }
-
-    const languages = [
-        ...new Set(
-            scripts.map(script =>
-                String(
-                    script.language || "Code"
-                ).toLowerCase()
-            )
-        )
-    ];
-
-    if (languagesCounter) {
-
-        languagesCounter.textContent =
-            languages.length;
-    }
-}
-
-/* =========================================================
-   LANGUAGE FILTERS
-   ========================================================= */
-
-function buildLanguageFilters() {
-
-    if (!filter) {
-        return;
-    }
-
-    const languages = [
-        ...new Set(
-            scripts.map(script =>
-                String(
-                    script.language || "Code"
-                ).toLowerCase()
-            )
-        )
-    ].sort();
-
-    filter.innerHTML = `
-        <option value="all">
-            All languages
-        </option>
-    `;
-
-    languages.forEach(language => {
-
-        const option =
-            document.createElement("option");
-
-        option.value = language;
-
-        option.textContent =
-            getLanguageInfo(language).label;
-
-        filter.appendChild(option);
-    });
-
-    if (languageList) {
-
-        languageList.innerHTML =
-            languages
-                .map(language => {
-
-                    return `
-                        <span class="language-item">
-                            ${escapeHTML(
-                                getLanguageInfo(language).label
-                            )}
-                        </span>
-                    `;
-
-                })
-                .join("");
-    }
-}
-
-/* =========================================================
-   SEARCH + FILTER
-   ========================================================= */
 
 function renderScripts() {
+  const container = $('#script-list') || $('#scripts-list') || $('.script-grid') || $('.scripts-grid');
+  if (!container) return;
 
-    if (!grid) {
-        return;
-    }
+  let list = state.scripts.filter(s => {
+    const q = state.query.toLowerCase();
+    const hay = [
+      s.title, s.description, s.language, s.path,
+      ...(Array.isArray(s.tags) ? s.tags : [])
+    ].join(' ').toLowerCase();
+    return (!q || hay.includes(q)) &&
+           (state.language === 'all' || String(s.language).toLowerCase() === state.language);
+  });
 
-    const query =
-        search ?
-        search.value.trim().toLowerCase() :
-        "";
+  state.filtered = list;
 
-    const selectedLanguage =
-        filter ?
-        filter.value :
-        "all";
+  // Preserve the site's existing card design by using common classes.
+  container.innerHTML = list.map((s, i) => `
+    <article class="script-card" data-index="${i}">
+      <div class="script-card-top">
+        <span class="language-badge">${escapeHtml(String(s.language || 'text').toUpperCase())}</span>
+        ${s.new ? '<span class="new-badge">NEW</span>' : ''}
+      </div>
+      <h3>${escapeHtml(s.title || 'Untitled')}</h3>
+      <p>${escapeHtml(s.description || '')}</p>
+      ${s.path ? `<div class="script-path">${escapeHtml(s.path)}</div>` : ''}
+      <div class="script-tags">${(Array.isArray(s.tags)?s.tags:[]).map(t=>`<span>${escapeHtml(t)}</span>`).join('')}</div>
+      <button class="view-script" data-index="${i}">View code <span>→</span></button>
+    </article>
+  `).join('') || `<div class="empty-state">Aucun script trouvé.</div>`;
 
-    const visibleScripts =
-        scripts.filter(script => {
-
-            const searchableText = [
-
-                script.title,
-
-                script.description,
-
-                script.language,
-
-                script.path,
-
-                ...(Array.isArray(script.tags)
-                    ? script.tags
-                    : [])
-
-            ]
-                .join(" ")
-                .toLowerCase();
-
-            const matchesSearch =
-                !query ||
-                searchableText.includes(query);
-
-            const matchesLanguage =
-                selectedLanguage === "all" ||
-                String(
-                    script.language || ""
-                ).toLowerCase() ===
-                selectedLanguage;
-
-            return (
-                matchesSearch &&
-                matchesLanguage
-            );
-        });
-
-    if (countLabel) {
-
-        countLabel.textContent =
-            `${visibleScripts.length} available`;
-    }
-
-    if (empty) {
-
-        empty.classList.toggle(
-            "hidden",
-            visibleScripts.length > 0
-        );
-    }
-
-    grid.innerHTML =
-        visibleScripts
-            .map(createScriptCard)
-            .join("");
-
-    attachCardEvents();
+  $$('.view-script').forEach(btn => btn.addEventListener('click', () => openScript(state.filtered[Number(btn.dataset.index)])));
+  updateStats();
 }
 
-/* =========================================================
-   SCRIPT CARD
-   ========================================================= */
-
-function createScriptCard(script) {
-
-    const language =
-        getLanguageInfo(script.language);
-
-    const tags =
-        Array.isArray(script.tags)
-            ? script.tags.slice(0, 5)
-            : [];
-
-    return `
-        <article
-            class="card"
-            data-script-path="${escapeHTML(
-                script._path
-            )}"
-        >
-
-            <div class="card-top">
-
-                <div>
-                    <h3>
-                        ${escapeHTML(
-                            script.title ||
-                            "Untitled"
-                        )}
-                    </h3>
-                </div>
-
-                ${
-                    script.new
-                        ? `
-                            <span class="new">
-                                NEW
-                            </span>
-                        `
-                        : ""
-                }
-
-            </div>
-
-            <p class="desc">
-                ${escapeHTML(
-                    script.description ||
-                    "No description."
-                )}
-            </p>
-
-            <div class="meta">
-
-                <span class="pill">
-                    ${escapeHTML(
-                        language.label
-                    )}
-                </span>
-
-                ${
-                    tags
-                        .map(tag => `
-                            <span class="pill">
-                                ${escapeHTML(tag)}
-                            </span>
-                        `)
-                        .join("")
-                }
-
-            </div>
-
-            <div class="card-footer">
-
-                <span>
-                    ${escapeHTML(
-                        script.path ||
-                        script._path
-                    )}
-                </span>
-
-                <span class="view">
-                    View code →
-                </span>
-
-            </div>
-
-        </article>
-    `;
+function updateStats() {
+  const count = $('#stat-scripts');
+  if (count) count.textContent = state.scripts.length;
+  const langs = [...new Set(state.scripts.map(s => String(s.language || '').toLowerCase()).filter(Boolean))];
+  const lc = $('#stat-languages');
+  if (lc) lc.textContent = langs.length;
+  const bottom = $('#stat-languages-bottom');
+  if (bottom) bottom.textContent = langs.length;
 }
 
-/* =========================================================
-   CARD EVENTS
-   ========================================================= */
-
-function attachCardEvents() {
-
-    document
-        .querySelectorAll(".card")
-        .forEach(card => {
-
-            card.addEventListener(
-                "click",
-                () => {
-
-                    const path =
-                        card.dataset.scriptPath;
-
-                    const script =
-                        scripts.find(
-                            item =>
-                                item._path === path
-                        );
-
-                    if (script) {
-
-                        openModal(script);
-                    }
-                }
-            );
-        });
-}
-
-/* =========================================================
-   MODAL
-   ========================================================= */
-
-function openModal(script) {
-
-    if (!script) {
-        return;
+function openScript(script) {
+  const modal = $('#script-modal') || $('#code-modal');
+  if (!modal) return;
+  const title = modal.querySelector('[data-script-title], .modal-title, h2, h3');
+  const code = modal.querySelector('code');
+  const path = modal.querySelector('[data-script-path], .modal-path');
+  if (title) title.textContent = script.title || 'Script';
+  if (path) path.textContent = script.path || '';
+  if (code) {
+    code.className = `language-${languageClass(script.language)}`;
+    code.textContent = script.code || '';
+    if (window.hljs) {
+      try { hljs.highlightElement(code); } catch(e) {}
     }
-
-    const modal =
-        document.getElementById("modal");
-
-    const title =
-        document.getElementById("modal-title");
-
-    const description =
-        document.getElementById(
-            "modal-description"
-        );
-
-    const language =
-        document.getElementById(
-            "modal-language"
-        );
-
-    const file =
-        document.getElementById(
-            "modal-file"
-        );
-
-    const code =
-        document.getElementById(
-            "modal-code"
-        );
-
-    if (!modal || !code) {
-        return;
-    }
-
-    const languageData =
-        getLanguageInfo(
-            script.language
-        );
-
-    if (title) {
-
-        title.textContent =
-            script.title ||
-            "Untitled";
-    }
-
-    if (description) {
-
-        description.textContent =
-            script.description ||
-            "";
-    }
-
-    if (language) {
-
-        language.textContent =
-            languageData.label;
-    }
-
-    if (file) {
-
-        file.textContent =
-            script.path ||
-            script._path;
-
-        file.dataset.file =
-            script._path;
-    }
-
-    code.className =
-        "language-" +
-        languageData.hl;
-
-    code.textContent =
-        script.code ||
-        "";
-
-    modal.classList.remove(
-        "hidden"
-    );
-
-    if (
-        window.hljs &&
-        typeof window.hljs.highlightElement ===
-        "function"
-    ) {
-
-        window.hljs.highlightElement(
-            code
-        );
-    }
+  }
+  modal.classList.add('open','active','show');
 }
 
-/* =========================================================
-   CLOSE MODAL
-   ========================================================= */
-
-function closeModal() {
-
-    const modal =
-        document.getElementById("modal");
-
-    if (modal) {
-
-        modal.classList.add(
-            "hidden"
-        );
-    }
+function closeModals() {
+  $$('.modal.open, .modal.active, .modal.show, #script-modal, #code-modal').forEach(m => {
+    m.classList.remove('open','active','show');
+  });
 }
 
-/* =========================================================
-   MODAL BUTTONS
-   ========================================================= */
-
-const closeButton =
-    document.getElementById(
-        "close-modal"
-    );
-
-if (closeButton) {
-
-    closeButton.addEventListener(
-        "click",
-        closeModal
-    );
+async function loadScripts() {
+  // The manifest is generated locally by the helper script before publishing.
+  try {
+    const response = await fetch('./scripts/manifest.json', {cache:'no-store'});
+    if (!response.ok) throw new Error('manifest not found');
+    const manifest = await response.json();
+    state.scripts = manifest.map(x => typeof x === 'string' ? null : x).filter(Boolean);
+  } catch (e) {
+    state.scripts = [];
+    console.warn('CodeHub: scripts/manifest.json is missing. Run generate-manifest.ps1.');
+  }
+  renderScripts();
 }
 
-const modalBackdrop =
-    document.querySelector(
-        ".modal-backdrop"
-    );
+document.addEventListener('DOMContentLoaded', () => {
+  const search = $('#search') || $('#search-input') || $('input[type="search"]');
+  if (search) search.addEventListener('input', e => { state.query=e.target.value; renderScripts(); });
 
-if (modalBackdrop) {
+  $$('.language-filter, [data-language]').forEach(el => el.addEventListener('click', () => {
+    state.language = (el.dataset.language || el.textContent || 'all').trim().toLowerCase();
+    $$('.language-filter, [data-language]').forEach(x => x.classList.remove('active'));
+    el.classList.add('active');
+    renderScripts();
+  }));
 
-    modalBackdrop.addEventListener(
-        "click",
-        closeModal
-    );
-}
+  document.addEventListener('click', e => {
+    if (e.target.closest('[data-close-modal], .modal-close, .close-modal')) closeModals();
+  });
 
-/* =========================================================
-   REFRESH
-   ========================================================= */
-
-const refreshButton =
-    document.getElementById(
-        "refresh"
-    );
-
-if (refreshButton) {
-
-    refreshButton.addEventListener(
-        "click",
-        loadScripts
-    );
-}
-
-/* =========================================================
-   COPY CODE
-   ========================================================= */
-
-const copyButton =
-    document.getElementById(
-        "copy-btn"
-    );
-
-if (copyButton) {
-
-    copyButton.addEventListener(
-        "click",
-        async () => {
-
-            const file =
-                document.getElementById(
-                    "modal-file"
-                );
-
-            if (!file) {
-                return;
-            }
-
-            const path =
-                file.dataset.file;
-
-            const script =
-                scripts.find(
-                    item =>
-                        item._path === path
-                );
-
-            if (!script) {
-                return;
-            }
-
-            const code =
-                script.code || "";
-
-            try {
-
-                await navigator.clipboard.writeText(
-                    code
-                );
-
-            } catch {
-
-                const textarea =
-                    document.createElement(
-                        "textarea"
-                    );
-
-                textarea.value =
-                    code;
-
-                document.body.appendChild(
-                    textarea
-                );
-
-                textarea.select();
-
-                document.execCommand(
-                    "copy"
-                );
-
-                textarea.remove();
-            }
-
-            const toast =
-                document.getElementById(
-                    "toast"
-                );
-
-            if (toast) {
-
-                toast.classList.add(
-                    "show"
-                );
-
-                setTimeout(
-                    () => {
-
-                        toast.classList.remove(
-                            "show"
-                        );
-
-                    },
-                    1400
-                );
-            }
-        }
-    );
-}
-
-/* =========================================================
-   SEARCH
-   ========================================================= */
-
-if (search) {
-
-    search.addEventListener(
-        "input",
-        renderScripts
-    );
-}
-
-if (filter) {
-
-    filter.addEventListener(
-        "change",
-        renderScripts
-    );
-}
-
-/* =========================================================
-   KEYBOARD
-   ========================================================= */
-
-document.addEventListener(
-    "keydown",
-    event => {
-
-        if (
-            (event.ctrlKey ||
-             event.metaKey) &&
-            event.key.toLowerCase() === "k"
-        ) {
-
-            event.preventDefault();
-
-            if (search) {
-                search.focus();
-            }
-        }
-
-        if (
-            event.key === "Escape"
-        ) {
-
-            closeModal();
-        }
-    }
-);
-
-/* =========================================================
-   START CODEHUB
-   ========================================================= */
-
-console.log(
-    "%cCodeHub V9",
-    "color:#7aa2ff;font-weight:bold;font-size:18px"
-);
-
-loadScripts();
+  loadScripts();
+});
