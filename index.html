@@ -1,0 +1,91 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>CodeHub — Code Library</title><link rel="stylesheet" href="style.css"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github-dark.min.css"></head><body>
+  <div id="dot-field" aria-hidden="true"></div>
+  <div id="mouse-glow" aria-hidden="true"></div>
+<div class="noise"></div><div class="orb orb-a"></div><div class="orb orb-b"></div><div class="grid-bg"></div>
+<header class="nav"><a class="logo" href="#"><span class="logo-icon">&lt;/&gt;</span><span>Code<span>Hub</span></span></a><nav class="nav-links"><a class="active" href="#scripts">Library</a><a href="#languages">Languages</a><a href="legal.html">Mentions légales</a></nav><div class="nav-right"><div class="search"><span>⌕</span><input id="search" placeholder="Search scripts..."><kbd>⌘ K</kbd></div><span class="online"><i></i> Online</span></div></header>
+<main>
+<section class="hero"><div class="hero-copy"><div class="eyebrow"><span></span> DEVELOPER LIBRARY</div><h1>Build. Share.<br><em>Code.</em></h1><p>A clean home for your scripts. Drop a <code>.json</code> file into <code>scripts/</code> and define its <code>path</code> and watch it appear automatically.</p><div class="hero-actions"><a href="#scripts" class="primary">Explore scripts <b>↗</b></a><a href="#languages" class="secondary">Supported languages</a></div><div class="stats"><div><strong id="stat-scripts">0</strong><span>Scripts</span></div><div><strong id="stat-languages">0</strong><span>Languages</span></div><div><strong>∞</strong><span>Possibilities</span></div></div></div><div class="code-window"><div class="window-top"><div class="dots"><i></i><i></i><i></i></div><span>scripts / new-script.json</span><span class="live">LIVE</span></div><div class="code-lines"><div><b>01</b><span class="pink">{</span></div><div><b>02</b><span>&nbsp;&nbsp;<span class="key">"title"</span>: <span class="str">"Your Script"</span>,</span></div><div><b>03</b><span>&nbsp;&nbsp;<span class="key">"language"</span>: <span class="str">"lua"</span>,</span></div><div><b>04</b><span>&nbsp;&nbsp;<span class="key">"path"</span>: <span class="str">"scripts/roblox/fly.lua"</span>,</span></div><div><b>04</b><span>&nbsp;&nbsp;<span class="key">"new"</span>: <span class="bool">true</span>,</span></div><div><b>05</b><span>&nbsp;&nbsp;<span class="key">"code"</span>: <span class="str">"print(Hello)"</span></span></div><div><b>06</b><span class="pink">}</span></div></div><div class="window-status"><span><i></i> Detected automatically</span><span>scripts/</span></div></div></section>
+<section id="scripts" class="library"><div class="section-title"><div><div class="mini-label">YOUR COLLECTION</div><h2>Scripts <span id="count-label">0 available</span></h2></div><div class="filters"><select id="language-filter"><option value="all">All languages</option></select><button id="refresh">↻ Refresh</button></div></div><div id="script-grid" class="script-grid"></div><div id="empty" class="empty hidden"><div class="empty-icon">⌁</div><h3>No scripts found</h3><p>Add a <code>.json</code> file to <code>scripts/</code> or change your search.</p></div></section>
+<section id="languages" class="languages">
+  <div class="languages-glow"></div>
+  <div class="languages-head">
+    <div>
+      <div class="mini-label">SUPPORTED LANGUAGES</div>
+      <h2>Code in your <em>language.</em></h2>
+      <p>Syntax highlighting automatically adapts to the language you define in each JSON file.</p>
+    </div>
+    <div class="languages-count"><span id="stat-languages-bottom">0</span><small>languages</small></div>
+  </div>
+  <div id="language-list" class="language-list"></div>
+  <div class="language-footer-line">
+    <span><i></i> Ready for your next script</span>
+    <span class="mono">CODEHUB / LIBRARY</span>
+  </div>
+</section>
+</main>
+<div id="toast" class="toast">✓ Copied to clipboard</div>
+<div id="modal" class="modal hidden"><div class="modal-backdrop"></div><div class="modal-box"><div class="modal-head"><div><span id="modal-language" class="lang-badge"></span><h2 id="modal-title"></h2><p id="modal-description"></p></div><button id="close-modal">×</button></div><div class="code-head"><span id="modal-file"></span><button id="copy-btn">Copy code</button></div><pre><code id="modal-code"></code></pre></div></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script><script src="dot-field.js"></script>
+  <script src="script.js"></script>
+
+
+
+<script>
+(() => {
+  const legalLinks = document.querySelectorAll('a[href="legal.html"], a[href$="/legal.html"]');
+  if (!legalLinks.length) return;
+
+  legalLinks.forEach(link => {
+    link.addEventListener('click', (event) => {
+      if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'legal-transition-v8';
+      overlay.innerHTML = `
+        <div class="lt-grid"></div>
+        <div class="lt-scan"></div>
+        <div class="lt-core"><span></span></div>
+        <div class="lt-ring lt-ring-1"></div>
+        <div class="lt-ring lt-ring-2"></div>
+        <div class="lt-ring lt-ring-3"></div>
+        <div class="lt-flash"></div>
+      `;
+
+      const grid = overlay.querySelector('.lt-grid');
+
+      for (let i = 0; i < 150; i++) {
+        const dot = document.createElement('i');
+        const angle = Math.random() * Math.PI * 2;
+        const distance = 160 + Math.random() * 680;
+        dot.style.setProperty('--x', `${Math.cos(angle) * distance}px`);
+        dot.style.setProperty('--y', `${Math.sin(angle) * distance}px`);
+        dot.style.setProperty('--d', `${Math.random() * 220}ms`);
+        dot.style.setProperty('--s', `${0.7 + Math.random() * 2.8}px`);
+        grid.appendChild(dot);
+      }
+
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => overlay.classList.add('active'));
+
+      setTimeout(() => {
+        window.location.href = link.href;
+      }, 900);
+    });
+  });
+})();
+</script>
+
+
+<script>
+(() => {
+  const source = document.getElementById('stat-languages');
+  const target = document.getElementById('stat-languages-bottom');
+  if (!source || !target) return;
+  const sync = () => { target.textContent = source.textContent || '0'; };
+  sync();
+  new MutationObserver(sync).observe(source, { childList: true, characterData: true, subtree: true });
+})();
+</script>
+
+</body></html>
