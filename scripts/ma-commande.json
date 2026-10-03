@@ -1,11 +1,24 @@
 [
   {
-    "title": "Admin Commands",
-    "description": "Commandes administrateur",
+    "title": "Ajout de Base",
+    "description": "Ce script et consue pour les Steal A Brainrot",
     "language": "lua",
-    "path": "X",
+    "path": "AddBase",
     "new": true,
     "tags": ["Base"],
-    "code": "H"
+    "code": "["1 OF 1"] = {
+        ["DisplayText"] = "1 OF 1",
+        ["UseRichText"] = true,
+        ["UseRichTextInSettings"] = true,
+        ["DisplayWithRichText"] = "<stroke thickness="2" transparency="0.5"><font color="#ffffff">1 OF 1</font></stroke>",
+        ["Order"] = 23,
+        ["ShowInSettings"] = false,
+        ["DisableIndex"] = true,
+        ["CountAllMutations"] = false,
+        ["CompletitionPercent"] = 1,
+        ["MainColor"] = Color3.fromRGB(255, 255, 255),
+        ["Index"] = {},
+        ["BaseColors"] = {},
+        -- Ce script change en fonction de la base !"
   }
 ]
